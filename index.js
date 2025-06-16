@@ -16,11 +16,10 @@ function delay(time) {
 async function login(page) {
     try {
         // Navigate to the login page
-        await page.goto('https://evo5.w12app.com.br/#/acesso/panobiancos/autenticacao', {
-            waitUntil: 'networkidle0'
-        });
+        await page.goto('https://evo5.w12app.com.br/#/acesso/panobiancos/autenticacao');
 
         // Wait for the login form to be loaded
+        await delay(1000);
         await page.waitForSelector('#usuario');
 
         // Fill in the login credentials
@@ -34,9 +33,7 @@ async function login(page) {
         await page.click('button[type="submit"]');
 
         // Wait for navigation after login
-        await page.waitForNavigation({
-            waitUntil: 'networkidle0'
-        });
+        await page.waitForNavigation();
 
         console.log('Login successful!');
         return true;
@@ -44,6 +41,57 @@ async function login(page) {
         console.error('Login failed:', error);
         return false;
     }
+}
+
+async function checkIfItIsClient(page) {
+    await page.waitForSelector('.md-toolbar-tools a');
+    const isClient = await page.evaluate(() => {
+        return document.querySelector('.md-toolbar-tools a').innerText.includes('Cliente');
+    });
+    return isClient;
+}
+
+
+async function sendMessageToClient(page, id) {
+    await page.waitForSelector('header nav > ul > li:nth-child(5) > a');
+    await delay(1000);
+    await page.click('header nav > ul > li:nth-child(5) > a');
+    
+    await sendGeneralMessage(page, id);
+}
+
+async function selectChatProFlow(page) {
+    await page.waitForSelector('#fluxoBot');
+    await page.click('#fluxoBot');
+
+    await page.evaluate(() => {
+        const chatProFlow = [...document.querySelectorAll('mat-option')].find(el =>  el.innerText.toLowerCase() === 'teste');
+        if(!chatProFlow) {
+            throw new Error('Chat Pro Flow not found');
+        }
+
+        return chatProFlow.click();
+    });
+}
+
+async function sendGeneralMessage(page, id) {
+    console.log(`Sending message to ${id}`);
+
+    await delay(1000);
+    const tab = await page.evaluate(() => {
+        return (document.querySelector('#mat-tab-label-1-4') ? 1 : 3);
+    });
+
+    await page.waitForSelector(`#mat-tab-label-${tab}-4`);
+    await page.click(`#mat-tab-label-${tab}-4`);
+
+    await page.waitForSelector(`#mat-tab-content-${tab}-4 a`);
+    await page.click(`#mat-tab-content-${tab}-4 a`);
+
+    await selectChatProFlow(page);
+    
+    await page.waitForSelector(`#mat-tab-content-${tab}-4 evo-button.m-t-sm.m-l-sm > button`);
+    await page.click(`#mat-tab-content-${tab}-4 evo-button.m-t-sm.m-l-sm > button`);
 }
 
 async function sendMessage(page, id) {
@@ -58,30 +106,16 @@ async function sendMessage(page, id) {
         await page.click('.item-lista');
         
         // Wait for navigation
-        await page.waitForNavigation({
-            waitUntil: 'networkidle0'
-        });
+        await page.waitForNavigation();
 
-        // Navigate to messages tab
-        await page.waitForSelector('#mat-tab-label-1-4');
-        await delay(1000);
-        await page.click('#mat-tab-label-1-4');
-        
-        // Click on message link
-        await page.waitForSelector('#mat-tab-content-1-4 a');
-        await page.click('#mat-tab-content-1-4 a');
-        
-        // Select bot flow
-        await page.waitForSelector('#fluxoBot');
-        await page.click('#fluxoBot');
+        await page.waitForSelector('.md-toolbar-tools a');
+        const isClient = await checkIfItIsClient(page);
 
-        // Select specific bot option
-        await page.waitForSelector(`#mat-option-${chatProFlowId}`);
-        await page.click(`#mat-option-${chatProFlowId}`);
-        
-        // Send message
-        await page.waitForSelector('#mat-tab-content-1-4 evo-button.m-t-sm.m-l-sm > button');
-        await page.click('#mat-tab-content-1-4 evo-button.m-t-sm.m-l-sm > button');
+        if(isClient) {
+            await sendMessageToClient(page, id);
+        } else {
+            await sendGeneralMessage(page, id);
+        }
         
         console.log(`Message sent successfully for ID: ${id}`);
         return true;
