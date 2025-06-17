@@ -33,7 +33,7 @@ function getIdsToCommunicate() {
 }
 
 const CHATPRO_FLOW_NAME = 'Agregadores 1~3 - Jun';
-const ids = getIdsToCommunicate
+const ids = getIdsToCommunicate();
 
 function delay(time) {
    return new Promise(function(resolve) { 
