@@ -1,7 +1,5 @@
 const puppeteer = require('puppeteer');
 
-const chatProFlowId = 85;
-
 const ids = [
     '3362769',
     '2622907',
