@@ -1,9 +1,18 @@
 const puppeteer = require('puppeteer');
+const xlsx = require('xlsx');
+const path = require('path');
 
-const ids = [
-    '3362769',
-    '2622907',
-]
+function getIdsFromExcel(fileName) {
+    const filePath = path.join(__dirname, 'data', fileName);
+    const workbook = xlsx.readFile(filePath);
+    const sheetName = workbook.SheetNames[0];
+    const worksheet = workbook.Sheets[sheetName];
+    const data = xlsx.utils.sheet_to_json(worksheet);
+
+    return data.map(row => row.ID || row.Id || row.id).filter(Boolean);
+}
+
+const ids = getIdsFromExcel('2025-jun-1-3-acessos.xlsx');
 
 function delay(time) {
    return new Promise(function(resolve) { 
