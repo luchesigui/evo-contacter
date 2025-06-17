@@ -182,11 +182,17 @@ async function main() {
         for (const id of ids) {
             const messageSuccess = await sendMessage(page, id);
             if (!messageSuccess) {
-                console.log(`Skipping to next ID after failure for ${id}`);
-                continue;
+                throw new Error(`Failed to send message for ID ${id}`);
             }
             // Add a small delay between processing IDs
             await delay(2000);
+        }
+
+        // Se chegou aqui, todos foram bem-sucedidos
+        const filePath = path.join(__dirname, 'comunicated-ids.txt');
+        if (fs.existsSync(filePath)) {
+            fs.unlinkSync(filePath);
+            console.log('Arquivo comunicated-ids.txt removido após sucesso total.');
         }
 
     } catch (error) {
