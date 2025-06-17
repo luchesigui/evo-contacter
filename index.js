@@ -115,7 +115,7 @@ async function selectChatProFlow(page) {
 }
 
 async function sendGeneralMessage(page, id) {
-  console.log(`Sending message to ${id}`);
+  console.log("Sending message to ID:", id);
 
   await delay(1000);
   const tab = await page.evaluate(() => {
