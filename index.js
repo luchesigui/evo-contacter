@@ -146,29 +146,30 @@ async function sendMessage(page, id) {
     await page.waitForSelector("#evoAutocomplete");
     await page.click("#evoAutocomplete");
     await page.type("#evoAutocomplete", id, { delay: 20 });
-    await delay(1000);
 
-    const noResults = await page.evaluate(() => {
-      return (
-        document.querySelector(".lista-autocomplete-pessoa").innerText ===
-        "Nenhum resultado encontrado."
-      );
-    });
+    let noResults = false;
+    try {
+      await page.waitForSelector(".item-lista", { timeout: 5000 });
+    } catch (error) {
+      noResults = true;
+    }
 
     if (noResults) {
       console.log(`No results found for ID: ${id}`);
+      await page.evaluate(() => {
+        const closeButton = document.querySelector(".icone-close-cliente");
+        if (closeButton) {
+          closeButton.click();
+        }
+      });
 
       fs.appendFileSync(
         path.join(__dirname, "clientes-inexistentes.txt"),
         id + "\n"
       );
     } else {
-      await page.waitForSelector(".item-lista");
       await page.click(".item-lista");
-
-      // Wait for navigation
-      await page.waitForNavigation();
-
+      await delay(1000);
       await page.waitForSelector(".md-toolbar-tools a");
       const isClient = await checkIfItIsClient(page);
 
