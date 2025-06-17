@@ -13,9 +13,27 @@ function getIdsFromExcel(fileName) {
     return data.map(row => row.ID || row.Id || row.id).filter(Boolean);
 }
 
-const CHATPRO_FLOW_NAME = 'Agregadores 1~3 - Jun';
+function getAlreadyCommunicatedIds() {
+    const filePath = path.join(__dirname, 'comunicated-ids.txt');
 
-const ids = getIdsFromExcel('2025-jun-1-3-acessos.xlsx');
+    if (fs.existsSync(filePath)) {
+        return fs.readFileSync(filePath, 'utf-8')
+            .split('\n')
+            .map(line => line.trim())
+            .filter(Boolean);
+    }
+
+    return [];
+}
+
+function getIdsToCommunicate() {
+    const allIds = getIdsFromExcel('2025-jun-1-3-acessos.xlsx');
+    const alreadyCommunicatedIds = getAlreadyCommunicatedIds();
+    return alreadyCommunicatedIds.length ? allIds.filter(id => !alreadyCommunicatedIds.includes(String(id))) : allIds;
+}
+
+const CHATPRO_FLOW_NAME = 'Agregadores 1~3 - Jun';
+const ids = getIdsToCommunicate
 
 function delay(time) {
    return new Promise(function(resolve) { 
