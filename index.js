@@ -1,6 +1,7 @@
 const puppeteer = require('puppeteer');
 const xlsx = require('xlsx');
 const path = require('path');
+const fs = require('fs');
 
 function getIdsFromExcel(fileName) {
     const filePath = path.join(__dirname, 'data', fileName);
@@ -128,6 +129,8 @@ async function sendMessage(page, id) {
             await sendGeneralMessage(page, id);
         }
         
+        // Escreve o id no arquivo após sucesso
+        fs.appendFileSync(path.join(__dirname, 'comunicated-ids.txt'), id + '\n');
         console.log(`Message sent successfully for ID: ${id}`);
         return true;
     } catch (error) {
