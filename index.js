@@ -146,24 +146,43 @@ async function sendMessage(page, id) {
     await page.waitForSelector("#evoAutocomplete");
     await page.click("#evoAutocomplete");
     await page.type("#evoAutocomplete", id, { delay: 20 });
-    await page.waitForSelector(".item-lista");
-    await page.click(".item-lista");
+    await delay(1000);
 
-    // Wait for navigation
-    await page.waitForNavigation();
+    const noResults = await page.evaluate(() => {
+      return (
+        document.querySelector(".lista-autocomplete-pessoa").innerText ===
+        "Nenhum resultado encontrado."
+      );
+    });
 
-    await page.waitForSelector(".md-toolbar-tools a");
-    const isClient = await checkIfItIsClient(page);
+    if (noResults) {
+      console.log(`No results found for ID: ${id}`);
 
-    if (isClient) {
-      await sendMessageToClient(page, id);
+      fs.appendFileSync(
+        path.join(__dirname, "clientes-inexistentes.txt"),
+        id + "\n"
+      );
     } else {
-      await sendGeneralMessage(page, id);
+      await page.waitForSelector(".item-lista");
+      await page.click(".item-lista");
+
+      // Wait for navigation
+      await page.waitForNavigation();
+
+      await page.waitForSelector(".md-toolbar-tools a");
+      const isClient = await checkIfItIsClient(page);
+
+      if (isClient) {
+        await sendMessageToClient(page, id);
+      } else {
+        await sendGeneralMessage(page, id);
+      }
+
+      console.log(`Message sent successfully for ID: ${id}`);
     }
 
     // Escreve o id no arquivo após sucesso
     fs.appendFileSync(path.join(__dirname, "comunicated-ids.txt"), id + "\n");
-    console.log(`Message sent successfully for ID: ${id}`);
     return true;
   } catch (error) {
     console.error(`Failed to send message for ID ${id}:`, error);
