@@ -12,6 +12,8 @@ function getIdsFromExcel(fileName) {
     return data.map(row => row.ID || row.Id || row.id).filter(Boolean);
 }
 
+const CHATPRO_FLOW_NAME = 'Agregadores 1~3 - Jun';
+
 const ids = getIdsFromExcel('2025-jun-1-3-acessos.xlsx');
 
 function delay(time) {
@@ -71,14 +73,16 @@ async function selectChatProFlow(page) {
     await page.waitForSelector('#fluxoBot');
     await page.click('#fluxoBot');
 
-    await page.evaluate(() => {
-        const chatProFlow = [...document.querySelectorAll('mat-option')].find(el =>  el.innerText.toLowerCase() === 'teste');
+    await page.evaluate(({
+        chatProFlowName
+    }) => {
+        const chatProFlow = [...document.querySelectorAll('mat-option')].find(el =>  el.innerText.toLowerCase() === chatProFlowName.toLocaleLowerCase());
         if(!chatProFlow) {
             throw new Error('Chat Pro Flow not found');
         }
 
         return chatProFlow.click();
-    });
+    }, { chatProFlowName: CHATPRO_FLOW_NAME });
 }
 
 async function sendGeneralMessage(page, id) {
