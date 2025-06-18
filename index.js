@@ -1,200 +1,16 @@
 const puppeteer = require("puppeteer");
-const xlsx = require("xlsx");
-const path = require("path");
-const fs = require("fs");
+const { delay } = require("./helpers/browser");
+const {
+  getIdsFromExcel,
+  getAlreadyCommunicatedIds,
+  getIdsToCommunicate,
+  removeCommunicatedIdsFile,
+} = require("./helpers/fileManager");
+const { login } = require("./modules/auth");
+const { sendMessage } = require("./modules/contactProcessor");
 
-function getIdsFromExcel(fileName) {
-  const filePath = path.join(__dirname, "data", fileName);
-  const workbook = xlsx.readFile(filePath);
-  const sheetName = workbook.SheetNames[0];
-  const worksheet = workbook.Sheets[sheetName];
-  const data = xlsx.utils.sheet_to_json(worksheet);
-
-  return data.map((row) => row.ID || row.Id || row.id).filter(Boolean);
-}
-
-function getAlreadyCommunicatedIds() {
-  const filePath = path.join(__dirname, "comunicated-ids.txt");
-
-  if (fs.existsSync(filePath)) {
-    return fs
-      .readFileSync(filePath, "utf-8")
-      .split("\n")
-      .map((line) => line.trim())
-      .filter(Boolean);
-  }
-
-  return [];
-}
-
-function getIdsToCommunicate(allIds, alreadyCommunicatedIds) {
-  return alreadyCommunicatedIds.length
-    ? allIds.filter((id) => !alreadyCommunicatedIds.includes(String(id)))
-    : allIds;
-}
-
-const CHATPRO_FLOW_NAME = "Agregadores 1~3 - Jun";
-const allIds = getIdsFromExcel("2025-jun-1-3-acessos.xlsx");
-
-function delay(time) {
-  return new Promise(function (resolve) {
-    setTimeout(resolve, time);
-  });
-}
-
-async function login(page) {
-  try {
-    // Navigate to the login page
-    await page.goto(
-      "https://evo5.w12app.com.br/#/acesso/panobiancos/autenticacao"
-    );
-
-    // Wait for the login form to be loaded
-    await delay(1000);
-    await page.waitForSelector("#usuario");
-
-    // Fill in the login credentials
-    await page.click("#usuario");
-    await page.type("#usuario", "gui.olhenrique@gmail.com", { delay: 20 });
-
-    await page.click("#senha");
-    await page.type("#senha", "dbt8rzu3RKP2fyd-aqd", { delay: 20 });
-
-    // Click the login button
-    await page.click('button[type="submit"]');
-
-    // Wait for navigation after login
-    await page.waitForNavigation();
-
-    console.log("Login successful!");
-    return true;
-  } catch (error) {
-    console.error("Login failed:", error);
-    return false;
-  }
-}
-
-async function checkIfItIsClient(page) {
-  await page.waitForSelector(".md-toolbar-tools a");
-  const isClient = await page.evaluate(() => {
-    return document
-      .querySelector(".md-toolbar-tools a")
-      .innerText.includes("Cliente");
-  });
-  return isClient;
-}
-
-async function sendMessageToClient(page, id) {
-  await page.waitForSelector("header nav > ul > li:nth-child(5) > a");
-  await delay(1000);
-  await page.click("header nav > ul > li:nth-child(5) > a");
-
-  await sendGeneralMessage(page, id);
-}
-
-async function selectChatProFlow(page) {
-  await page.waitForSelector("#fluxoBot");
-  await page.click("#fluxoBot");
-
-  await page.evaluate(
-    ({ chatProFlowName }) => {
-      const chatProFlow = [...document.querySelectorAll("mat-option")].find(
-        (el) =>
-          el.innerText.toLowerCase() === chatProFlowName.toLocaleLowerCase()
-      );
-      if (!chatProFlow) {
-        throw new Error("Chat Pro Flow not found");
-      }
-
-      return chatProFlow.click();
-    },
-    { chatProFlowName: CHATPRO_FLOW_NAME }
-  );
-}
-
-async function sendGeneralMessage(page, id) {
-  console.log("Sending message to ID:", id);
-
-  await delay(1000);
-  const tab = await page.evaluate(() => {
-    return document.querySelector("#mat-tab-label-1-4") ? 1 : 3;
-  });
-
-  await page.waitForSelector(`#mat-tab-label-${tab}-4`);
-  await page.click(`#mat-tab-label-${tab}-4`);
-
-  await page.waitForSelector(`#mat-tab-content-${tab}-4 a`);
-  await page.click(`#mat-tab-content-${tab}-4 a`);
-
-  await selectChatProFlow(page);
-
-  await page.waitForSelector(
-    `#mat-tab-content-${tab}-4 evo-button.m-t-sm.m-l-sm > button`
-  );
-  await page.click(
-    `#mat-tab-content-${tab}-4 evo-button.m-t-sm.m-l-sm > button`
-  );
-}
-
-async function sendMessage(page, id) {
-  try {
-    console.log(`Processing ID: ${id}`);
-
-    // Verifica se o ID já foi comunicado
-    const alreadyCommunicatedIds = getAlreadyCommunicatedIds();
-    if (alreadyCommunicatedIds.includes(String(id))) {
-      console.log(`Duplicated contact attempt for the ID: ${id}`);
-      return true;
-    }
-
-    // Search for the contact
-    await page.waitForSelector("#evoAutocomplete");
-    await page.click("#evoAutocomplete");
-    await page.type("#evoAutocomplete", id, { delay: 20 });
-
-    let noResults = false;
-    try {
-      await page.waitForSelector(".item-lista", { timeout: 5000 });
-    } catch (error) {
-      noResults = true;
-    }
-
-    if (noResults) {
-      console.log(`No results found for ID: ${id}`);
-      await page.evaluate(() => {
-        const closeButton = document.querySelector(".icone-close-cliente");
-        if (closeButton) {
-          closeButton.click();
-        }
-      });
-
-      fs.appendFileSync(
-        path.join(__dirname, "clientes-inexistentes.txt"),
-        id + "\n"
-      );
-    } else {
-      await page.click(".item-lista");
-      await delay(1000);
-      await page.waitForSelector(".md-toolbar-tools a");
-      const isClient = await checkIfItIsClient(page);
-
-      if (isClient) {
-        await sendMessageToClient(page, id);
-      } else {
-        await sendGeneralMessage(page, id);
-      }
-
-      console.log(`Message sent successfully for ID: ${id}`);
-    }
-
-    // Escreve o id no arquivo após sucesso
-    fs.appendFileSync(path.join(__dirname, "comunicated-ids.txt"), id + "\n");
-    return true;
-  } catch (error) {
-    console.error("Failed to send message for ID:", id);
-    return false;
-  }
-}
+const allIds = ["3362769", "2622907"];
+// const allIds = getIdsFromExcel("2025-jun-1-3-acessos.xlsx");
 
 async function main() {
   const alreadyCommunicatedIds = getAlreadyCommunicatedIds();
@@ -204,7 +20,7 @@ async function main() {
   try {
     // Launch the browser
     browser = await puppeteer.launch({
-      headless: true,
+      headless: false,
       defaultViewport: null,
       args: ["--start-maximized"],
       timeout: 60000,
@@ -233,11 +49,7 @@ async function main() {
     }
 
     // Se chegou aqui, todos foram bem-sucedidos
-    const filePath = path.join(__dirname, "comunicated-ids.txt");
-    if (fs.existsSync(filePath)) {
-      fs.unlinkSync(filePath);
-      console.log("Arquivo comunicated-ids.txt removido após sucesso total.");
-    }
+    removeCommunicatedIdsFile();
   } catch (error) {
     console.error("An error occurred:", error);
 
