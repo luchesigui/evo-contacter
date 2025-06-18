@@ -2,3 +2,5 @@ node_modules
 package-lock.json
 .env
 coverage
+clientes-inexistentes.txt
+comunicated-ids.txt
