@@ -27,16 +27,14 @@ function getAlreadyCommunicatedIds() {
   return [];
 }
 
-function getIdsToCommunicate() {
-  const allIds = getIdsFromExcel("2025-jun-1-3-acessos.xlsx");
-  const alreadyCommunicatedIds = getAlreadyCommunicatedIds();
+function getIdsToCommunicate(allIds, alreadyCommunicatedIds) {
   return alreadyCommunicatedIds.length
     ? allIds.filter((id) => !alreadyCommunicatedIds.includes(String(id)))
     : allIds;
 }
 
 const CHATPRO_FLOW_NAME = "Agregadores 1~3 - Jun";
-const ids = getIdsToCommunicate();
+const allIds = getIdsFromExcel("2025-jun-1-3-acessos.xlsx");
 
 function delay(time) {
   return new Promise(function (resolve) {
@@ -142,6 +140,13 @@ async function sendMessage(page, id) {
   try {
     console.log(`Processing ID: ${id}`);
 
+    // Verifica se o ID já foi comunicado
+    const alreadyCommunicatedIds = getAlreadyCommunicatedIds();
+    if (alreadyCommunicatedIds.includes(String(id))) {
+      console.log(`Duplicated contact attempt for the ID: ${id}`);
+      return true;
+    }
+
     // Search for the contact
     await page.waitForSelector("#evoAutocomplete");
     await page.click("#evoAutocomplete");
@@ -186,12 +191,15 @@ async function sendMessage(page, id) {
     fs.appendFileSync(path.join(__dirname, "comunicated-ids.txt"), id + "\n");
     return true;
   } catch (error) {
-    console.error(`Failed to send message for ID ${id}:`, error);
+    console.error("Failed to send message for ID:", id);
     return false;
   }
 }
 
 async function main() {
+  const alreadyCommunicatedIds = getAlreadyCommunicatedIds();
+  const ids = getIdsToCommunicate(allIds, alreadyCommunicatedIds);
+
   let browser;
   try {
     // Launch the browser
@@ -232,6 +240,12 @@ async function main() {
     }
   } catch (error) {
     console.error("An error occurred:", error);
+
+    if (browser) {
+      await browser.close();
+    }
+
+    await main();
   } finally {
     // Uncomment to close browser when done
     if (browser) await browser.close();
