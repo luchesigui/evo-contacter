@@ -1,4 +1,4 @@
-const { delay, waitAndClick } = require("../helpers/browser");
+import { delay, waitAndClick } from "../helpers/browser.js";
 
 const CHATPRO_FLOW_NAME = "Agregadores 1~3 - Jun";
 
@@ -54,8 +54,4 @@ async function sendMessageToClient(page, id) {
   await sendGeneralMessage(page, id);
 }
 
-module.exports = {
-  checkIfItIsClient,
-  sendGeneralMessage,
-  sendMessageToClient,
-};
+export { checkIfItIsClient, sendGeneralMessage, sendMessageToClient };

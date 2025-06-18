@@ -9,7 +9,4 @@ async function waitAndClick(page, selector, timeout = 30000) {
   await page.click(selector);
 }
 
-module.exports = {
-  delay,
-  waitAndClick,
-};
+export { delay, waitAndClick };

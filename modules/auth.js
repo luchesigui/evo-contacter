@@ -1,4 +1,4 @@
-const { delay, waitAndClick } = require("../helpers/browser");
+import { delay, waitAndClick } from "../helpers/browser.js";
 
 async function login(page) {
   try {
@@ -31,6 +31,4 @@ async function login(page) {
   }
 }
 
-module.exports = {
-  login,
-};
+export { login };

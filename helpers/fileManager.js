@@ -1,6 +1,10 @@
-const xlsx = require("xlsx");
-const path = require("path");
-const fs = require("fs");
+import fs from "fs";
+import path from "path";
+import { fileURLToPath } from "url";
+import xlsx from "xlsx";
+
+const __filename = fileURLToPath(import.meta.url);
+const __dirname = path.dirname(__filename);
 
 // Carrega os IDs a partir do arquivo Excel
 function getIdsFromExcel(fileName) {
@@ -54,11 +58,11 @@ function removeCommunicatedIdsFile() {
   }
 }
 
-module.exports = {
-  getIdsFromExcel,
-  getAlreadyCommunicatedIds,
-  getIdsToCommunicate,
+export {
   addToCommunicatedIds,
   addToNonExistentClients,
+  getAlreadyCommunicatedIds,
+  getIdsFromExcel,
+  getIdsToCommunicate,
   removeCommunicatedIdsFile,
 };

@@ -1,13 +1,12 @@
-const puppeteer = require("puppeteer");
-const { delay } = require("./helpers/browser");
-const {
-  getIdsFromExcel,
+import puppeteer from "puppeteer";
+import { delay } from "./helpers/browser.js";
+import {
   getAlreadyCommunicatedIds,
   getIdsToCommunicate,
   removeCommunicatedIdsFile,
-} = require("./helpers/fileManager");
-const { login } = require("./modules/auth");
-const { sendMessage } = require("./modules/contactProcessor");
+} from "./helpers/fileManager.js";
+import { login } from "./modules/auth.js";
+import { sendMessage } from "./modules/contactProcessor.js";
 
 const allIds = ["3362769", "2622907"];
 // const allIds = getIdsFromExcel("2025-jun-1-3-acessos.xlsx");

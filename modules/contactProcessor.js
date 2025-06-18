@@ -1,14 +1,14 @@
-const { delay, waitAndClick } = require("../helpers/browser");
-const {
-  getAlreadyCommunicatedIds,
+import { delay, waitAndClick } from "../helpers/browser.js";
+import {
   addToCommunicatedIds,
   addToNonExistentClients,
-} = require("../helpers/fileManager");
-const {
+  getAlreadyCommunicatedIds,
+} from "../helpers/fileManager.js";
+import {
   checkIfItIsClient,
   sendGeneralMessage,
   sendMessageToClient,
-} = require("./messaging");
+} from "./messaging.js";
 
 const IS_DEBUG_ACTIVE = true;
 
@@ -73,6 +73,4 @@ async function sendMessage(page, id) {
   }
 }
 
-module.exports = {
-  sendMessage,
-};
+export { sendMessage };
