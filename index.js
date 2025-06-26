@@ -2,14 +2,16 @@ import puppeteer from "puppeteer";
 import { delay } from "./helpers/browser.js";
 import {
   getAlreadyCommunicatedIds,
+  getIdsFromExcel,
   getIdsToCommunicate,
   removeCommunicatedIdsFile,
 } from "./helpers/fileManager.js";
 import { login } from "./modules/auth.js";
-import { sendMessage } from "./modules/contactProcessor.js";
+import { CommunicationTypes, sendMessage } from "./modules/contactProcessor.js";
 
-const allIds = ["3362769", "2622907"];
-// const allIds = getIdsFromExcel("2025-jun-1-3-acessos.xlsx");
+// const allIds = ["3362769", "2622907"];
+const allIds = getIdsFromExcel("2025-jun-4-7-acessos.xlsx");
+const typeOfCommunication = CommunicationTypes.EMAIL;
 
 async function main() {
   const alreadyCommunicatedIds = getAlreadyCommunicatedIds();
@@ -19,7 +21,7 @@ async function main() {
   try {
     // Launch the browser
     browser = await puppeteer.launch({
-      headless: false,
+      headless: true,
       defaultViewport: null,
       args: ["--start-maximized"],
       timeout: 60000,
@@ -39,7 +41,7 @@ async function main() {
 
     // Process each ID
     for (const id of ids) {
-      const messageSuccess = await sendMessage(page, id);
+      const messageSuccess = await sendMessage(page, id, typeOfCommunication);
       if (!messageSuccess) {
         throw new Error(`Failed to send message for ID ${id}`);
       }

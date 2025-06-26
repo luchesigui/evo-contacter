@@ -5,6 +5,10 @@ import {
   getAlreadyCommunicatedIds,
 } from "../helpers/fileManager.js";
 import {
+  sendEmailMarketing,
+  sendEmailMarketingToClient,
+} from "./email-marketing.js";
+import {
   checkIfItIsClient,
   sendGeneralMessage,
   sendMessageToClient,
@@ -12,7 +16,12 @@ import {
 
 const IS_DEBUG_ACTIVE = true;
 
-async function sendMessage(page, id) {
+export const CommunicationTypes = Object.freeze({
+  EMAIL: "email",
+  MESSAGING: "messaging",
+});
+
+async function sendMessage(page, id, typeOfCommunication) {
   try {
     console.log(`Processing ID: ${id}`);
 
@@ -51,9 +60,13 @@ async function sendMessage(page, id) {
       const isClient = await checkIfItIsClient(page);
 
       if (isClient) {
-        await sendMessageToClient(page, id);
+        await (typeOfCommunication === CommunicationTypes.EMAIL
+          ? sendEmailMarketingToClient(page, id)
+          : sendMessageToClient(page, id));
       } else {
-        await sendGeneralMessage(page, id);
+        await (typeOfCommunication === CommunicationTypes.EMAIL
+          ? sendEmailMarketing(page, id)
+          : sendGeneralMessage(page, id));
       }
 
       console.log(`Message sent successfully for ID: ${id}`);
