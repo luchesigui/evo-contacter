@@ -4,3 +4,4 @@ package-lock.json
 coverage
 clientes-inexistentes.txt
 comunicated-ids.txt
+*.xlsx
