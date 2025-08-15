@@ -1,7 +1,7 @@
 import { delay, waitAndClick } from "../helpers/browser.js";
 import { envVariablesShouldExist } from "../helpers/envValidator.js";
 
-envVariablesShouldExist(["EMAIL_TEMPLATE_NAME", "EMAIL_SUBJECT"]);
+envVariablesShouldExist(["EMAIL_TEMPLATE_NAME"]);
 
 const EMAIL_TEMPLATE_NAME = process.env.EMAIL_TEMPLATE_NAME;
 const EMAIL_SUBJECT = process.env.EMAIL_SUBJECT;

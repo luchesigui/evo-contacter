@@ -1,5 +1,9 @@
-import puppeteer from "puppeteer";
+import dotenv from "dotenv";
 
+// Load environment variables first, before any other imports
+dotenv.config();
+
+import puppeteer from "puppeteer";
 import { delay } from "./helpers/browser.js";
 import { getIdsBasedOnEnvironment } from "./helpers/environmentHelper.js";
 import {
