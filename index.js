@@ -1,16 +1,16 @@
 import puppeteer from "puppeteer";
+
 import { delay } from "./helpers/browser.js";
+import { getIdsBasedOnEnvironment } from "./helpers/environmentHelper.js";
 import {
   getAlreadyCommunicatedIds,
-  getIdsFromExcel,
   getIdsToCommunicate,
   removeCommunicatedIdsFile,
 } from "./helpers/fileManager.js";
 import { login } from "./modules/auth.js";
 import { CommunicationTypes, sendMessage } from "./modules/contactProcessor.js";
 
-// const allIds = ["3362769", "2622907"];
-const allIds = getIdsFromExcel("2025-jun-4-7-acessos.xlsx");
+const allIds = getIdsBasedOnEnvironment();
 const typeOfCommunication = CommunicationTypes.EMAIL;
 
 async function main() {

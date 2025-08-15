@@ -1,8 +1,10 @@
 import { delay, waitAndClick } from "../helpers/browser.js";
+import { envVariablesShouldExist } from "../helpers/envValidator.js";
 
-const EMAIL_TEMPLATE_NAME = "Alunos wellhub de 4 a 7 acessos";
-const EMAIL_SUBJECT =
-  "Você está quase lá! 10 check-ins e uma garrafinha te esperam!";
+envVariablesShouldExist(["EMAIL_TEMPLATE_NAME", "EMAIL_SUBJECT"]);
+
+const EMAIL_TEMPLATE_NAME = process.env.EMAIL_TEMPLATE_NAME;
+const EMAIL_SUBJECT = process.env.EMAIL_SUBJECT;
 
 async function selectEmailMarketingTemplate(page) {
   await waitAndClick(page, "#selecioneTemplateMensagem");
@@ -45,7 +47,9 @@ export async function sendEmailMarketing(page, id, isClient) {
 
   await delay(1000);
 
-  await page.type("#assuntoEmail", EMAIL_SUBJECT);
+  if (EMAIL_SUBJECT) {
+    await page.type("#assuntoEmail", EMAIL_SUBJECT);
+  }
 
   await waitAndClick(
     page,
