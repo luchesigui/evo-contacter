@@ -34,7 +34,7 @@ async function sendMessage(page, id, typeOfCommunication) {
 
     // Search for the contact
     await waitAndClick(page, "#evoAutocomplete");
-    await page.type("#evoAutocomplete", id, { delay: 20 });
+    await page.type("#evoAutocomplete", id.toString(), { delay: 20 });
 
     let noResults = false;
     try {
