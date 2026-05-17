@@ -12,14 +12,10 @@ async function selectEmailMarketingTemplate(page) {
   await page.evaluate(
     ({ emailTemplateName }) => {
       const emailTemplate = [
-        ...document.querySelectorAll("mat-option .mat-option-text"),
+        ...document.querySelectorAll(
+          "mat-option .mat-option-text .evo-chip-default",
+        ),
       ].find((el) => el.innerText.trim() === emailTemplateName);
-
-      console.log(
-        [...document.querySelectorAll("mat-option .mat-option-text")].map(
-          (el) => el.innerText.trim()
-        )
-      );
 
       if (!emailTemplate) {
         throw new Error("Email Marketing Template not found");
@@ -27,7 +23,7 @@ async function selectEmailMarketingTemplate(page) {
 
       return emailTemplate.click();
     },
-    { emailTemplateName: EMAIL_TEMPLATE_NAME }
+    { emailTemplateName: EMAIL_TEMPLATE_NAME },
   );
 }
 
@@ -39,7 +35,7 @@ export async function sendEmailMarketing(page, id, isClient) {
 
   await waitAndClick(
     page,
-    `.mat-tab-labels [role=tab]:nth-child(${emailTabId})`
+    `.mat-tab-labels [role=tab]:nth-child(${emailTabId})`,
   );
   await waitAndClick(page, ".mat-tab-body-active button");
 
@@ -53,7 +49,7 @@ export async function sendEmailMarketing(page, id, isClient) {
 
   await waitAndClick(
     page,
-    ".mat-tab-body-active evo-button.m-t-sm.m-l-sm > button"
+    ".mat-tab-body-active evo-button.m-t-sm.m-l-sm > button",
   );
 }
 
